@@ -4,29 +4,52 @@
 ;; Add a contract here
 (define shift-left
   (lambda (ls)
-    "Implement me"))
+    (if (or (empty? ls) (equal? (length ls) 1))
+      ls
+      (append (cdr ls) (list (car ls))))))
 
 ;; Add a contract here
 (define shift-k-left
   (lambda (ls k)
-    "Implement me"))
+    (if (equal? k 0)
+      ls
+      (shift-k-left (shift-left ls) (- k 1)))))
 
 ;; Add a contract here
 (define shift-right
   (lambda (ls)
-    "Implement me"))
+    (if (or (empty? ls) (equal? (length ls) 1))
+      ls
+      (append (list (last ls)) (take ls (- (length ls) 1))))))
 
 ;; Add a contract here
 (define combine
   (lambda (ls1 ls2)
-    "Implement me"))
+    (if (empty? ls1)
+      ls2
+      (if (empty? ls2)
+        ls1
+        (append (append (list (car ls1)) (list (car ls2))) (combine (cdr ls1) (cdr ls2)))))))
 
 ;; Add a contract here
 (define sum-tree
   (lambda (tree)
-    "Implement me"))
+    (if (empty? tree)
+      0
+      (foldl (lambda (root curr-sum)
+        (+ curr-sum (sum-tree root))) (car tree) (cdr tree)))))
 
 ;; Add a contract here
 (define inverse-tree
   (lambda (tree)
-    "Implement me"))
+    (if (empty? tree)
+      tree
+      (append (list (if (boolean? (car tree))
+                              (not (car tree))
+                              (- (car tree))))
+              (if (empty? (cdr tree))
+                (cdr tree)
+                (foldl (lambda (root curr-tree) 
+                          (append curr-tree (list (inverse-tree root)))) '() (cdr tree)))))))
+     
+    
