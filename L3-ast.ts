@@ -26,6 +26,7 @@ import { makeCompoundSExp, makeEmptySExp, makeSymbolSExp, SExp } from './value'
 ;;         |  ( lambda ( <var>* ) <cexp>+ ) / ProcExp(params:VarDecl[], body:CExp[]))
 ;;         |  ( if <cexp> <cexp> <cexp> )   / IfExp(test: CExp, then: CExp, alt: CExp)
 ;;         |  ( let ( binding* ) <cexp>+ )  / LetExp(bindings:Binding[], body:CExp[]))
+;;         |  ( let* ( binding* ) <cexp>+ )  / LetStarExp(bindings:Binding[], body:CExp[]))
 ;;         |  ( quote <sexp> )              / LitExp(val:SExp)
 ;;         |  ( <cexp> <cexp>* )            / AppExp(operator:CExp, operands:CExp[]))
 ;; <binding>  ::= ( <var> <cexp> )           / Binding(var:VarDecl, val:Cexp)
@@ -61,6 +62,7 @@ export interface IfExp {tag: "IfExp"; test: CExp; then: CExp; alt: CExp; };
 export interface ProcExp {tag: "ProcExp"; args: VarDecl[], body: CExp[]; };
 export interface Binding {tag: "Binding"; var: VarDecl; val: CExp; };
 export interface LetExp {tag: "LetExp"; bindings: Binding[]; body: CExp[]; };
+export interface LetStarExp {tag: "LetStarExp"; bindings: Binding[]; body: CExp[]; };
 // L3
 export interface LitExp {tag: "LitExp"; val: SExp; };
 
@@ -85,6 +87,8 @@ export const makeBinding = (v: VarDecl, val: CExp): Binding =>
     ({tag: "Binding", var: v, val: val});
 export const makeLetExp = (bindings: Binding[], body: CExp[]): LetExp =>
     ({tag: "LetExp", bindings: bindings, body: body});
+export const makeLetStarExp = (bindings: Binding[], body: CExp[]): LetStarExp =>
+    ({tag: "LetStarExp", bindings: bindings, body: body});
 // L3
 export const makeLitExp = (val: SExp): LitExp =>
     ({tag: "LitExp", val: val});
@@ -105,6 +109,7 @@ export const isIfExp = (x: any): x is IfExp => x.tag === "IfExp";
 export const isProcExp = (x: any): x is ProcExp => x.tag === "ProcExp";
 export const isBinding = (x: any): x is Binding => x.tag === "Binding";
 export const isLetExp = (x: any): x is LetExp => x.tag === "LetExp";
+export const isLetStarExp = (x: any): x is LetStarExp => x.tag === "LetStarExp";
 // l3
 export const isLitExp = (x: any): x is LitExp => x.tag === "LitExp";
 
@@ -114,7 +119,7 @@ export const isAtomicExp = (x: any): x is AtomicExp =>
     isNumExp(x) || isBoolExp(x) || isStrExp(x) ||
     isPrimOp(x) || isVarRef(x);
 export const isCompoundExp = (x: any): x is CompoundExp =>
-    isAppExp(x) || isIfExp(x) || isProcExp(x) || isLitExp(x) || isLetExp(x);
+    isAppExp(x) || isIfExp(x) || isProcExp(x) || isLitExp(x) || isLetExp(x) || isLetStarExp(x);
 export const isCExp = (x: any): x is CExp =>
     isAtomicExp(x) || isCompoundExp(x);
 
@@ -213,6 +218,7 @@ const parseL3CompoundCExp = (sexps: any[]): CExp | Error =>
     first(sexps) === "if" ? parseIfExp(sexps) :
     first(sexps) === "lambda" ? parseProcExp(sexps) :
     first(sexps) === "let" ? parseLetExp(sexps) :
+    first(sexps) === "let*" ? parseLetStarExp(sexps) :
     first(sexps) === "quote" ? parseLitExp(sexps) :
     parseAppExp(sexps)
 
@@ -239,6 +245,17 @@ const parseLetExp = (sexps: any[]): LetExp | Error =>
 const safeMakeLetExp = (bindings: Binding[] | Error, body: Array<CExp | Error>) =>
     isError(bindings) ? bindings :
     hasNoError(body) ? makeLetExp(bindings, body) :
+    Error(getErrorMessages(body));
+
+// LetStarExp ::= (let* (<binding>*) <cexp>+)
+const parseLetStarExp = (sexps: any[]): LetStarExp | Error =>
+    sexps.length < 3 ? Error(`Expected (let (<binding>*) <cexp>+) - ${sexps}`) :
+    safeMakeLetStarExp(parseBindings(sexps[1]),
+                   map(parseL3CExp, sexps.slice(2)));
+
+const safeMakeLetStarExp = (bindings: Binding[] | Error, body: Array<CExp | Error>) =>
+    isError(bindings) ? bindings :
+    hasNoError(body) ? makeLetStarExp(bindings, body) :
     Error(getErrorMessages(body));
 
 const parseBindings = (pairs: any[]): Binding[] | Error =>
