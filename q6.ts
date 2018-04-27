@@ -17,7 +17,7 @@ export const unparse = (x: Program | DefineExp | CExp) : string | Error => {
            isVarRef(x) ? x.var:
            isVarDecl(x) ? x.var:
            isError(x) ? x.message:
-           isAppExp(x) ? "(" + reduce((acc, curr) => unparse(curr) + " " +  acc, "", x.rands) + unparse(x.rator) + ")" :
+           isAppExp(x) ? "(" + unparse(x.rator) + reduce((acc, curr) => unparse(curr) + " " +  acc, "", x.rands) + ")" :
            Error("Unknown cexp type: " + x):
            Error("Unknown type: " + x);
 }
