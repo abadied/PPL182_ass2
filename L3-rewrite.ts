@@ -17,7 +17,7 @@ export const rewriteLetStar = (cexp: Parsed | Error) : LetExp  | Error =>
 {
     if(isLetStarExp(cexp)){
         if(cexp.bindings.length > 1){
-            const written = rewriteLetStar(makeLetStarExp([cexp.bindings[0]], cexp.body));
+            const written = rewriteLetStar(makeLetStarExp(cexp.bindings.slice(1), cexp.body));
             if(isCExp(written)){
                 return makeLetExp([cexp.bindings[0]], [written]);
             } else{
@@ -49,9 +49,16 @@ export const rewriteAllLetStar = (cexp: Parsed | Binding | Error) : Parsed | Bin
                makeIfExp(map(rewriteAllLetStar, cexp.test), map(rewriteAllLetStar,cexp.then), map(rewriteAllLetStar,cexp.alt)):
             
            isAppExp(cexp) ? 
-                   makeAppExp(map(rewriteAllLetStar(cexp.rator)), map(rewriteAllLetStar,cexp.rands)) :
-           isLetStarExp(cexp) ? rewriteLetStar(cexp):
-           isLetExp(cexp) ? makeLetExp(cexp.bindings, map(rewriteAllLetStar,cexp.body)):
+                   makeAppExp(rewriteAllLetStar(cexp.rator), map(rewriteAllLetStar,cexp.rands)) :
+           isLetStarExp(cexp) ? rewriteAllLetStar(rewriteLetStar(cexp)):
+           isLetExp(cexp) ? makeLetExp(map((cexp) => makeBinding(cexp.var, rewriteAllLetStar(cexp.val)),cexp.bindings), map(rewriteAllLetStar,cexp.body)):
            isProcExp(cexp) ? makeProcExp(map(rewriteAllLetStar, cexp.args), map(rewriteAllLetStar, cexp.body)):
            Error("Unexpected expression " + cexp);
 }
+
+// console.log(JSON.stringify(parseL3("(let* ((x 3) (y x)) x y)"), null, 4));
+// console.log(JSON.stringify(
+//     rewriteLetStar(parseL3("(let* ((x 5) (y x) (z y)) (+ 1 2))")),null,4));
+// console.log(JSON.stringify(rewriteAllLetStar(parseL3
+//     ("(let* ((x (let* ((y 5)) y)) (z 7)) (+ x (let* ((t 12)) t)))")),
+//     null,4));
