@@ -77,7 +77,7 @@ export const rewriteAllLetStar = (cexp: Parsed | Binding | Error) : Parsed | Bin
         return rewriteAllLetStar(rewriteLetStar(cexp));
     }else if(isLetExp(cexp)){
         return  makeLetExp(map((cexp) => {let cexp_val = rewriteAllLetStar(cexp.val); return isCExp(cexp_val) ? makeBinding(cexp.var, cexp_val) : Error("Unexpected expression " + cexp);}, cexp.bindings), map(rewriteAllLetStar,cexp.body));
-    }else if( isProcExp(cexp) ){
+    }else if(isProcExp(cexp) ){
         return makeProcExp(map(rewriteAllLetStar, cexp.args), map(rewriteAllLetStar, cexp.body));
     }else{
         return Error("Unexpected expression " + cexp);
@@ -87,6 +87,6 @@ export const rewriteAllLetStar = (cexp: Parsed | Binding | Error) : Parsed | Bin
 // console.log(JSON.stringify(parseL3("(let* ((x 3) (y x)) x y)"), null, 4));
 // console.log(JSON.stringify(
 //     rewriteLetStar(parseL3("(let* ((x 5) (y x) (z y)) (+ 1 2))")),null,4));
-console.log(JSON.stringify(rewriteAllLetStar(parseL3
-    ("(let* ((x (let* ((y 5)) y)) (z 7)) (+ x (let* ((t 12)) t)))")),
-    null,4));
+// console.log(JSON.stringify(rewriteAllLetStar(parseL3
+//     ("(let* ((x (let* ((y 5)) y)) (z 7)) (+ x (let* ((t 12)) t)))")),
+//     null,4));

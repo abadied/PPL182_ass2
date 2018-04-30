@@ -3,7 +3,7 @@ import { hasError, isAppExp, isBoolExp, isCExp, isDefineExp, isError, isNumExp, 
          isProgram, isVarRef, isVarDecl } from "./L1-ast";
 import { parseL1 } from "./L1-ast";
 import { first, isEmpty, rest } from "./L1-ast";
-//import * as assert from "assert";
+import * as assert from "assert";
 import { filter, map, reduce } from "ramda";
 
 
